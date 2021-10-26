@@ -22,11 +22,8 @@ typedef struct snake{
     int grow_count;
     int length;
     int count;
-<<<<<<< HEAD
     enum direction dir;
-=======
     int points;
->>>>>>> 29feb2a08a669e6566771028e8239b25e58f50b6
 };
 
 typedef struct map{
