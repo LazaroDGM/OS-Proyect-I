@@ -13,11 +13,12 @@ typedef struct body{
 
 typedef struct snake{
     struct body *body;
-    struct body *head;
-    struct body *tail;
+    int head;
+    int tail;
     int grow_count;
     int length;
     int count;
+    int points;
 };
 
 typedef struct map{
@@ -73,15 +74,15 @@ void start(struct map *m, struct snake *s, int height, int wide){
         bodys[i-1].x = wide/2 + i -3;
         bodys[i-1].y = height/2;
     }
-    s->head = s->body+2;
-    s->tail = s->body;
+    s->head = 2;
+    s->tail = 0;
     s->count = 3;
     s->grow_count = 0;
 
     for(int i =0;i<s->count-1;i++){
-        m->grid[s->tail[i].y][s->tail[i].x] = BODY;
+        m->grid[s->body[s->tail+i].y][s->body[s->tail+i].x] = BODY;
     }
-    m->grid[s->head->y][s->head->y]=HEAD;
+    m->grid[s->body[s->head].y][s->body[s->head].x]=HEAD;
 }
 
 void paint(struct map *m){
