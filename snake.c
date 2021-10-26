@@ -94,6 +94,7 @@ int Move(struct snake *s, struct map *m)
     if(directionanding_index == 0) return 0;
     srand(time(NULL));
     int r = rand() % (directionanding_index + 1);
+    s->dir = r;
     
     if(m->grid[directionanding[r].x][directionanding[r].y] == EGG)
     {
