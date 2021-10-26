@@ -13,7 +13,7 @@ typedef struct snake{
     struct body *body;
     struct body *head;
     struct body *tail;
-    int grow;
+    int grow_count;
     int length;
     int count;
 };
@@ -22,12 +22,13 @@ typedef struct map{
     char** grid;
     int height;
     int wide;
+    int eggs_count;
 };
 
 
 
-void inicio(struct map *map, struct snake *snake, int height, int wide);
-void pintar(struct map *map);
+void start(struct map *map, struct snake *snake, int height, int wide);
+void paint(struct map *map);
 void len(int **arr);
 
 
@@ -41,13 +42,9 @@ void main(){
     struct snake snake;
     struct map map;
 
-    int t[20][10] = {0};
-    printf("%d\n", t[4][5]);
+    start(&map, &snake, height, wide);
 
-    inicio(&map, &snake, height, wide);
-
-    printf("%d\n", snake.count);
-
+    paint(&map);
     //char map[height][wide];
 
     //printf("%d", sizeof(map));
@@ -58,39 +55,47 @@ void len(int **arr){
     arr[2][4] = 123;
 }
 
-void inicio(struct map *map, struct snake *snake, int height, int wide){
-    char grid[height][wide];
+void start(struct map *m, struct snake *s, int height, int wide){
+
+    char ** grid=(char **)calloc(height,sizeof(char *));
+    for (int i =0; i<height;i++){
+        grid[i]= (char *)calloc(wide, sizeof(char));
+    }
+
     for(int i =0;i<height;i++){
         for(int j =0;j<wide;j++){
             grid[i][j] = VOID;
         }
     }
-    struct map m=*map;
-    m.grid = grid;
-    m.height = height;
-    m.wide = wide;
+    m->grid = grid;
+    m->height = height;
+    m->wide = wide;
 
+    s->length = height*wide;
+    struct body bodys[(*s).length];
+    s->body = bodys;
 
-    struct snake* snk = snake;
-    (*snake).length = height*wide;
-    struct body bodys[(*snake).length];
-    (*snake).body = bodys;
-    (*snake).head = &((*snake).body);
-    (*snake).tail = &((*snake).body);
-    (*snk).count = 1;
-    (*snake).grow = 0;
+    for(int i = 3;i>0;i--){
+        bodys[i-1].x = wide/2 + i -3;
+        bodys[i-1].y = height/2;
+    }
+    s->head = s->body+2;
+    s->tail = s->body;
+    s->count = 3;
+    s->grow_count = 0;
+
+    for(int i =0;i<s->count-1;i++){
+        m->grid[s->tail[i].y][s->tail[i].x] = BODY;
+    }
+    m->grid[s->head->y][s->head->y]=HEAD;
 }
 
-//void mover(char *map, struct snake *snake);
-
-void pintar(struct map *map){
-    return;
-    //struct map m = *map;
-    //char g[][]= m.grid
-    //for(int i =0;i<m.height;i++){
-    //    for(int j =0;j<m.wide;j++){
-    //        printf("%c", *(map+i*wide+j));
-    //    }
-    //    printf("\n");
-    //}
+void paint(struct map *m){
+    
+    for(int i =0;i<m->height;i++){
+        for(int j =0;j<m->wide;j++){
+            printf("%c", m->grid[i][j]);
+        }
+        printf("\n");
+    }
 }
