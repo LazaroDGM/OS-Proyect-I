@@ -39,11 +39,11 @@ static int y_directional_offset[] = {0, 1, 0, -1 };
 static struct body directionanding[4];
 static int directionanding_index = 0;
 
-int Move(struct snake *s, struct map *m);                                                                                                      // Function Prototype
-void MoveTo(struct map *m, struct snake *s, int new_x, int new_y);                                                         // Function Prototype
-void start(struct map *map, struct snake *snake, int height, int wide);
-void paint(struct map *map);
-void len(int **arr);
+int Move(struct snake *s, struct map *m);                                                                                                    // Function Prototype
+void MoveTo(struct map *m, struct snake *s, int new_x, int new_y);                                                          // Function Prototype
+void start(struct map *map, struct snake *snake, int height, int wide);                                                     // Function Prototype
+void paint(struct map *map);                                                                                                                          // Function Rpototype
+void len(int **arr);                                                                                                                                            // Function Rpototype
 
 void main(){
 
@@ -80,11 +80,11 @@ int Move(struct snake *s, struct map *m)
             new_y >= 0 && new_y < m->height &&                                                                                                    // Fuera de Rango de la Matriz
             (m->grid[new_x][new_y] != BODY || 
             (new_x == tail_x &&
-            new_y == tail_y && s->grow_count == 0)))            // No hay cuerpo de la serpiente en esa direccion, y su lo hay, es la cola y no se esta creciendo
+            new_y == tail_y && s->grow_count == 0)))          // No hay cuerpo de la serpiente en esa direccion, y su lo hay, es la cola y no se esta creciendo
             {   
-                struct body new_posible_way;                                                                                                            // Inicializando 
-                new_posible_way.x = new_x;                                                                                                          // Inicializando 
-                new_posible_way.y = new_y;                                                                                                          // Inicializando 
+                struct body new_posible_way;                                                                                                                 // Inicializando 
+                new_posible_way.x = new_x;                                                                                                                   // Inicializando 
+                new_posible_way.y = new_y;                                                                                                                   // Inicializando 
 
 
                 directionanding[directionanding_index] = new_posible_way;
@@ -95,7 +95,13 @@ int Move(struct snake *s, struct map *m)
     srand(time(NULL));
     int r = rand() % (directionanding_index + 1);
     
+    if(m->grid[directionanding[r].x][directionanding[r].y] == EGG)
+    {
+        m->eggs_count--;
+        s->points += 1;
+    }
     MoveTo(m, s, directionanding[r].x, directionanding[r].y);
+
     return 1;
 }
 
@@ -117,7 +123,6 @@ void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
     m->grid[new_x][new_y] = HEAD;
     s->head = (s->head + 1) % s->length;
 }
-
 
 void start(struct map *m, struct snake *s, int height, int wide){
 
