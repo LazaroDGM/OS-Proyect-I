@@ -9,7 +9,8 @@
 
 
 
-enum direction{ UP, RIGHT, DOWN, LEFT };
+
+enum direction{ LEFT=0, UP, RIGHT, DOWN};
 
 typedef struct body{
     int x, y;
@@ -42,8 +43,8 @@ static int directionanding_index = 0;
 int Move(struct snake *s, struct map *m);                                                                                                    // Function Prototype
 void MoveTo(struct map *m, struct snake *s, int new_x, int new_y);                                                          // Function Prototype
 void start(struct map *map, struct snake *snake, int height, int wide);                                                     // Function Prototype
-void paint(struct map *map);                                                                                                                          // Function Rpototype
-void len(int **arr);                                                                                                                                            // Function Rpototype
+void paint(struct map *map);                                                                                                                          // Function Rpototype   
+void snake_body(struct snake s);                                                                                                                    // Function Rpototype
 
 void main(){
 
@@ -51,34 +52,37 @@ void main(){
 
     scanf("%d%d", &height, &wide);
 
-
     struct snake snake;
     struct map map;
 
     start(&map, &snake, height, wide);
-
-    add_eggs(&map, snake.length - snake.count);
-
+    snake_body(snake);
+    //add_eggs(&map, snake.length - snake.count);
     paint(&map);
+    snake_body(snake);
+    for (int i = 0; i < 10; i++){
+        Move(&snake,&map);
+        paint(&map);
+        snake_body(snake);
+    }
 }
 
 
 
-int Move(struct snake *s, struct map *m)
-{
+int Move(struct snake *s, struct map *m){
     int head_x = s->body[s->head].x;
     int head_y = s->body[s->head].y;
     int tail_x = s->body[s->tail].x;
     int tail_y = s->body[s->tail].y;
 
-    for (unsigned int  direc = 0; direc < 4; direc++)
+    for (int  direc = 0; direc < 4; direc++)
     {
         if(s->dir == (direc + 2) % 4) continue;
         int new_x = head_x + x_directional_offset[direc];
         int new_y = head_y + y_directional_offset[direc];
         if(new_x >= 0 && new_x < m->wide &&                                                                                                       // Fuera de Rango de la Matriz
             new_y >= 0 && new_y < m->height &&                                                                                                    // Fuera de Rango de la Matriz
-            (m->grid[new_x][new_y] != BODY || 
+            (m->grid[new_y][new_x] != BODY || 
             (new_x == tail_x &&
             new_y == tail_y && s->grow_count == 0)))          // No hay cuerpo de la serpiente en esa direccion, y su lo hay, es la cola y no se esta creciendo
             {   
@@ -96,7 +100,7 @@ int Move(struct snake *s, struct map *m)
     int r = rand() % (directionanding_index + 1);
     s->dir = r;
     
-    if(m->grid[directionanding[r].x][directionanding[r].y] == EGG)
+    if(m->grid[directionanding[r].y][directionanding[r].x] == EGG)
     {
         m->eggs_count--;
         s->points += 1;
@@ -110,7 +114,9 @@ void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
 {
     if(s->grow_count == 0) 
     {
-        m->grid[s->body[s->tail].x][s->body[s->tail].y] = VOID;
+        int y = s->body[s->tail].y;
+        int x = s->body[s->tail].x;
+        m->grid[s->body[s->tail].y][s->body[s->tail].x] = VOID;
         s->tail = (s->tail + 1) % s->length;
     }
     else
@@ -120,9 +126,11 @@ void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
     }
     int current_head_x_position = s->body[s->head].x;
     int current_head_y_position = s->body[s->head].y;
-    m->grid[current_head_x_position][current_head_y_position] = BODY;
-    m->grid[new_x][new_y] = HEAD;
+    m->grid[current_head_y_position][current_head_x_position] = BODY;
+    m->grid[new_y][new_x] = HEAD;
     s->head = (s->head + 1) % s->length;
+    s->body[s->head].x = new_x;
+    s->body[s->head].y = new_y;
 }
 
 void start(struct map *m, struct snake *s, int height, int wide){
@@ -142,13 +150,14 @@ void start(struct map *m, struct snake *s, int height, int wide){
     m->wide = wide;
 
     s->length = height*wide;
-    struct body bodys[(*s).length];
-    s->body = bodys;
+    struct body *bodys = calloc(height*wide, sizeof(struct body));
 
     for(int i = 3;i>0;i--){
         bodys[i-1].x = wide/2 + i -3;
         bodys[i-1].y = height/2;
     }
+    s->body = bodys;
+    
     s->head = 2;
     s->tail = 0;
     s->count = 3;
@@ -158,10 +167,11 @@ void start(struct map *m, struct snake *s, int height, int wide){
         m->grid[s->body[s->tail+i].y][s->body[s->tail+i].x] = BODY;
     }
     m->grid[s->body[s->head].y][s->body[s->head].x]=HEAD;
+    snake_body(*s);
 }
 
 void paint(struct map *m){
-    system("clear");
+    //system("clear");
     for(int i =0;i<m->height;i++){
         for(int j =0;j<m->wide;j++){
             printf("%c", m->grid[i][j]);
@@ -201,4 +211,15 @@ void add_eggs(struct map *m, int voids){
                 break;
         }
     }
+}
+
+void snake_body(struct snake s){
+    int x, y;
+    for (int i = s.tail; i!=s.head;i++){
+        x = s.body[i].x;
+        y = s.body[i].y;
+        printf("%d,%d\n", x, y);
+    }
+    printf("%d,%d\n", s.body[s.head].x, s.body[s.head].y);
+    printf("\n");
 }
