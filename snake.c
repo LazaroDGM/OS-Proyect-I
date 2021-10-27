@@ -60,7 +60,6 @@ void main(){
     add_eggs(&map, snake.length - snake.count);
 
     paint(&map);
-    system("Pause");
 }
 
 
@@ -79,7 +78,9 @@ int Move(struct snake *s, struct map *m)
         int new_y = head_y + y_directional_offset[direc];
         if(new_x >= 0 && new_x < m->wide &&                                                                                                       // Fuera de Rango de la Matriz
             new_y >= 0 && new_y < m->height &&                                                                                                    // Fuera de Rango de la Matriz
-            (m->grid[new_x][new_y] != BODY       ||        (new_x == tail_x && new_y == tail_y && s->grow == 0)))            // No hay cuerpo de la serpiente en esa direccion, y su lo hay, es la cola y no se esta creciendo
+            (m->grid[new_x][new_y] != BODY || 
+            (new_x == tail_x &&
+            new_y == tail_y && s->grow_count == 0)))            // No hay cuerpo de la serpiente en esa direccion, y su lo hay, es la cola y no se esta creciendo
             {   
                 struct body new_posible_way;                                                                                                            // Inicializando 
                 new_posible_way.x = new_x;                                                                                                          // Inicializando 
@@ -100,14 +101,14 @@ int Move(struct snake *s, struct map *m)
 
 void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
 {
-    if(s->grow == 0) 
+    if(s->grow_count == 0) 
     {
         m->grid[s->body[s->tail].x][s->body[s->tail].y] = VOID;
         s->tail = (s->tail + 1) % s->length;
     }
     else
     {
-        s->grow--;
+        s->grow_count--;
         s->count++;
     }
     int current_head_x_position = s->body[s->head].x;
@@ -116,8 +117,6 @@ void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
     m->grid[new_x][new_y] = HEAD;
     s->head = (s->head + 1) % s->length;
 }
-
-
 
 
 void start(struct map *m, struct snake *s, int height, int wide){
@@ -156,7 +155,7 @@ void start(struct map *m, struct snake *s, int height, int wide){
 }
 
 void paint(struct map *m){
-    
+    system("clear");
     for(int i =0;i<m->height;i++){
         for(int j =0;j<m->wide;j++){
             printf("%c", m->grid[i][j]);
