@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
+#include <unistd.h>
 
 
 
@@ -56,15 +56,21 @@ void main(){
     struct map map;
 
     start(&map, &snake, height, wide);
-    snake_body(snake);
-    //add_eggs(&map, snake.length - snake.count);
-    paint(&map);
-    snake_body(snake);
-    for (int i = 0; i < 10; i++){
-        Move(&snake,&map);
+
+    do{
+        if(map.eggs_count==0){
+            add_eggs(&map, snake.length - snake.count);
+        }
+        system("clear");
+        printf("Puntuación: %d\n", snake.points);
         paint(&map);
-        snake_body(snake);
+        usleep(200000);
     }
+    while (snake.length-snake.count>0 &&
+        Move(&snake,&map));
+
+
+    //snake_body(snake);
 }
 
 
@@ -75,9 +81,10 @@ int Move(struct snake *s, struct map *m){
     int tail_x = s->body[s->tail].x;
     int tail_y = s->body[s->tail].y;
 
+    directionanding_index=0;
     for (int  direc = 0; direc < 4; direc++)
     {
-        if(s->dir == (direc + 2) % 4) continue;
+        //if(s->dir == (direc + 2) % 4) continue;
         int new_x = head_x + x_directional_offset[direc];
         int new_y = head_y + y_directional_offset[direc];
         if(new_x >= 0 && new_x < m->wide &&                                                                                                       // Fuera de Rango de la Matriz
@@ -89,22 +96,27 @@ int Move(struct snake *s, struct map *m){
                 struct body new_posible_way;                                                                                                                 // Inicializando 
                 new_posible_way.x = new_x;                                                                                                                   // Inicializando 
                 new_posible_way.y = new_y;                                                                                                                   // Inicializando 
-
+                
+                //printf("P: (%d,%d)",new_x,new_y);
 
                 directionanding[directionanding_index] = new_posible_way;
                 directionanding_index++;
             }
     }
+    //printf("\n");
     if(directionanding_index == 0) return 0;
     srand(time(NULL));
-    int r = rand() % (directionanding_index + 1);
-    s->dir = r;
+    int r = rand() % (directionanding_index);
+
+    //s->dir = r;
     
     if(m->grid[directionanding[r].y][directionanding[r].x] == EGG)
     {
         m->eggs_count--;
-        s->points += 1;
+        s->points++;
+        s->grow_count+=3;
     }
+    //printf("r:%d (%d,%d)\n",r,directionanding[r].x,directionanding[r].y);
     MoveTo(m, s, directionanding[r].x, directionanding[r].y);
 
     return 1;
@@ -148,6 +160,7 @@ void start(struct map *m, struct snake *s, int height, int wide){
     m->grid = grid;
     m->height = height;
     m->wide = wide;
+    m->eggs_count=0;
 
     s->length = height*wide;
     struct body *bodys = calloc(height*wide, sizeof(struct body));
@@ -162,6 +175,8 @@ void start(struct map *m, struct snake *s, int height, int wide){
     s->tail = 0;
     s->count = 3;
     s->grow_count = 0;
+    s->dir=RIGHT;
+    s->points=0;
 
     for(int i =0;i<s->count-1;i++){
         m->grid[s->body[s->tail+i].y][s->body[s->tail+i].x] = BODY;
@@ -171,7 +186,6 @@ void start(struct map *m, struct snake *s, int height, int wide){
 }
 
 void paint(struct map *m){
-    //system("clear");
     for(int i =0;i<m->height;i++){
         for(int j =0;j<m->wide;j++){
             printf("%c", m->grid[i][j]);
