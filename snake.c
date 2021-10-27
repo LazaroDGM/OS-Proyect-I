@@ -23,7 +23,6 @@ typedef struct snake{
     int grow_count;
     int length;
     int count;
-    enum direction dir;
     int points;
 };
 
@@ -81,12 +80,12 @@ int Move(struct snake *s, struct map *m){
     int tail_x = s->body[s->tail].x;
     int tail_y = s->body[s->tail].y;
 
+    int new_x;
+    int new_y;
     directionanding_index=0;
-    for (int  direc = 0; direc < 4; direc++)
-    {
-        //if(s->dir == (direc + 2) % 4) continue;
-        int new_x = head_x + x_directional_offset[direc];
-        int new_y = head_y + y_directional_offset[direc];
+    for (int  direc = 0; direc < 4; direc++){
+        new_x = head_x + x_directional_offset[direc];
+        new_y = head_y + y_directional_offset[direc];
         if(new_x >= 0 && new_x < m->wide &&                                                                                                       // Fuera de Rango de la Matriz
             new_y >= 0 && new_y < m->height &&                                                                                                    // Fuera de Rango de la Matriz
             (m->grid[new_y][new_x] != BODY || 
@@ -107,8 +106,6 @@ int Move(struct snake *s, struct map *m){
     if(directionanding_index == 0) return 0;
     srand(time(NULL));
     int r = rand() % (directionanding_index);
-
-    //s->dir = r;
     
     if(m->grid[directionanding[r].y][directionanding[r].x] == EGG)
     {
@@ -126,8 +123,6 @@ void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
 {
     if(s->grow_count == 0) 
     {
-        int y = s->body[s->tail].y;
-        int x = s->body[s->tail].x;
         m->grid[s->body[s->tail].y][s->body[s->tail].x] = VOID;
         s->tail = (s->tail + 1) % s->length;
     }
@@ -175,7 +170,6 @@ void start(struct map *m, struct snake *s, int height, int wide){
     s->tail = 0;
     s->count = 3;
     s->grow_count = 0;
-    s->dir=RIGHT;
     s->points=0;
 
     for(int i =0;i<s->count-1;i++){
