@@ -3,5 +3,6 @@ snake
 snake.exe
 snake.o
 snklib.o
+utillib.o
 prooves.exe
 prooves

@@ -3,6 +3,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "snklib.h"
+#include "utillib.h"
 
 
 static int x_directional_offset[] = {-1, 0, 1, 0 };
