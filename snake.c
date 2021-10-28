@@ -15,7 +15,7 @@ void start(struct map *map, struct snake *snake, int height, int wide);
 int move(struct snake *s, struct map *m);  
 
 void main(){
-
+    
     int height, wide;
 
     scanf("%d%d", &height, &wide);
