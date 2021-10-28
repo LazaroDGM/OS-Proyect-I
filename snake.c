@@ -1,37 +1,8 @@
-#define EGG 'x'
-#define BODY 'o'
-#define HEAD '@'
-#define VOID '.'
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
-
-
-enum direction{ LEFT=0, UP, RIGHT, DOWN};
-
-typedef struct body{
-    int x, y;
-};
-
-typedef struct snake{
-    struct body *body;
-    int head;
-    int tail;
-    int grow_count;
-    int length;
-    int count;
-    int points;
-};
-
-typedef struct map{
-    char** grid;
-    int height;
-    int wide;
-    int eggs_count;
-};
+#include "snklib.h"
 
 
 static int x_directional_offset[] = {-1, 0, 1, 0 };
@@ -39,11 +10,8 @@ static int y_directional_offset[] = {0, 1, 0, -1 };
 static struct body directionanding[4];
 static int directionanding_index = 0;
 
-int Move(struct snake *s, struct map *m);                                                                                                    // Function Prototype
-void MoveTo(struct map *m, struct snake *s, int new_x, int new_y);                                                          // Function Prototype
-void start(struct map *map, struct snake *snake, int height, int wide);                                                     // Function Prototype
-void paint(struct map *map);                                                                                                                          // Function Rpototype   
-void snake_body(struct snake s);                                                                                                                    // Function Rpototype
+void start(struct map *map, struct snake *snake, int height, int wide);
+int move(struct snake *s, struct map *m);  
 
 void main(){
 
@@ -66,78 +34,10 @@ void main(){
         usleep(200000);
     }
     while (snake.length-snake.count>0 &&
-        Move(&snake,&map));
+        move(&snake,&map));
 
 
     //snake_body(snake);
-}
-
-
-
-int Move(struct snake *s, struct map *m){
-    int head_x = s->body[s->head].x;
-    int head_y = s->body[s->head].y;
-    int tail_x = s->body[s->tail].x;
-    int tail_y = s->body[s->tail].y;
-
-    int new_x;
-    int new_y;
-    directionanding_index=0;
-    for (int  direc = 0; direc < 4; direc++){
-        new_x = head_x + x_directional_offset[direc];
-        new_y = head_y + y_directional_offset[direc];
-        if(new_x >= 0 && new_x < m->wide &&                                                                                                       // Fuera de Rango de la Matriz
-            new_y >= 0 && new_y < m->height &&                                                                                                    // Fuera de Rango de la Matriz
-            (m->grid[new_y][new_x] != BODY || 
-            (new_x == tail_x &&
-            new_y == tail_y && s->grow_count == 0)))          // No hay cuerpo de la serpiente en esa direccion, y su lo hay, es la cola y no se esta creciendo
-            {   
-                struct body new_posible_way;                                                                                                                 // Inicializando 
-                new_posible_way.x = new_x;                                                                                                                   // Inicializando 
-                new_posible_way.y = new_y;                                                                                                                   // Inicializando 
-                
-                //printf("P: (%d,%d)",new_x,new_y);
-
-                directionanding[directionanding_index] = new_posible_way;
-                directionanding_index++;
-            }
-    }
-    //printf("\n");
-    if(directionanding_index == 0) return 0;
-    srand(time(NULL));
-    int r = rand() % (directionanding_index);
-    
-    if(m->grid[directionanding[r].y][directionanding[r].x] == EGG)
-    {
-        m->eggs_count--;
-        s->points++;
-        s->grow_count+=3;
-    }
-    //printf("r:%d (%d,%d)\n",r,directionanding[r].x,directionanding[r].y);
-    MoveTo(m, s, directionanding[r].x, directionanding[r].y);
-
-    return 1;
-}
-
-void MoveTo(struct map *m, struct snake *s, int new_x, int new_y)
-{
-    if(s->grow_count == 0) 
-    {
-        m->grid[s->body[s->tail].y][s->body[s->tail].x] = VOID;
-        s->tail = (s->tail + 1) % s->length;
-    }
-    else
-    {
-        s->grow_count--;
-        s->count++;
-    }
-    int current_head_x_position = s->body[s->head].x;
-    int current_head_y_position = s->body[s->head].y;
-    m->grid[current_head_y_position][current_head_x_position] = BODY;
-    m->grid[new_y][new_x] = HEAD;
-    s->head = (s->head + 1) % s->length;
-    s->body[s->head].x = new_x;
-    s->body[s->head].y = new_y;
 }
 
 void start(struct map *m, struct snake *s, int height, int wide){
@@ -176,58 +76,56 @@ void start(struct map *m, struct snake *s, int height, int wide){
         m->grid[s->body[s->tail+i].y][s->body[s->tail+i].x] = BODY;
     }
     m->grid[s->body[s->head].y][s->body[s->head].x]=HEAD;
-    snake_body(*s);
 }
 
-void paint(struct map *m){
-    for(int i =0;i<m->height;i++){
-        for(int j =0;j<m->wide;j++){
-            printf("%c", m->grid[i][j]);
-        }
-        printf("\n");
-    }
-}
+int move(struct snake *s, struct map *m){
+    int head_x = s->body[s->head].x;
+    int head_y = s->body[s->head].y;
+    int tail_x = s->body[s->tail].x;
+    int tail_y = s->body[s->tail].y;
 
-void add_eggs(struct map *m, int voids){
-    srand(time(NULL));
+    int new_x;
+    int new_y;
+    directionanding_index=0;
+    for (int  direc = 0; direc < 4; direc++){
+        new_x = head_x + x_directional_offset[direc];
+        new_y = head_y + y_directional_offset[direc];
 
-    m->eggs_count=voids;
-    if (voids > 5){
-        m->eggs_count=5;
-        int rand_h, rand_w;
-        for(int i =0; i<5;i++){
-            do{
-                rand_h = rand() % m->height;        
-                rand_w = rand() % m->wide;
-            }while(m->grid[rand_h][rand_w] != VOID);
-            m->grid[rand_h][rand_w] = EGG;
-        }
-    } else{
-        m->eggs_count=5;
-        int break_for =0;
-        for (int i = 0;i<m->height;i++){
-            for (int j = 0;j<m->wide;j++){
-                if (m->grid[i][j] == VOID){
-                    m->grid[i][j] = EGG;
-                    if (--voids == 0) {
-                        break_for = 1;
-                        break;
-                    }
-                }
+            // Fuera de Rango de la Matriz
+        if(new_x >= 0 && new_x < m->wide && 
+            new_y >= 0 && new_y < m->height &&
+            // No hay cuerpo de la serpiente en esa direccion,
+            (m->grid[new_y][new_x] != BODY || 
+            // O si es la cola y no se esta creciendo
+            (new_x == tail_x &&
+            new_y == tail_y &&
+            s->grow_count == 0)))
+            {   
+                // Inicializando
+                struct body new_posible_way;
+                new_posible_way.x = new_x;
+                new_posible_way.y = new_y;
+                
+                //printf("P: (%d,%d)",new_x,new_y);
+
+                directionanding[directionanding_index] = new_posible_way;
+                directionanding_index++;
             }
-            if (break_for!=0)
-                break;
-        }
     }
+    //printf("\n");
+    if(directionanding_index == 0) return 0;
+    srand(time(NULL));
+    int r = rand() % (directionanding_index);
+    
+    if(m->grid[directionanding[r].y][directionanding[r].x] == EGG)
+    {
+        m->eggs_count--;
+        s->points++;
+        s->grow_count+=3;
+    }
+    //printf("r:%d (%d,%d)\n",r,directionanding[r].x,directionanding[r].y);
+    moveTo(m, s, directionanding[r].x, directionanding[r].y);
+
+    return 1;
 }
 
-void snake_body(struct snake s){
-    int x, y;
-    for (int i = s.tail; i!=s.head;i++){
-        x = s.body[i].x;
-        y = s.body[i].y;
-        printf("%d,%d\n", x, y);
-    }
-    printf("%d,%d\n", s.body[s.head].x, s.body[s.head].y);
-    printf("\n");
-}

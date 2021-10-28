@@ -1,5 +1,7 @@
 .vscode
 snake
 snake.exe
+snake.o
+snklib.o
 prooves.exe
 prooves
