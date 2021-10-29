@@ -13,7 +13,7 @@ static int directionanding_index = 0;
 
 void start(struct map *map, struct snake *snake, int height, int wide);
 int move(struct snake *s, struct map *m);  
-void lee(Map *m, Stack *s, int x, int y);
+int lee(Map *m, Stack *s, int x, int y);
 
 void main(){
     
@@ -28,21 +28,23 @@ void main(){
 
     start(&map, &snake, height, wide);
 
-    lee(&map,&stack,2,2);
+    Body next_move;
+    while (snake.length-snake.count>0 &&
+        lee(&map, &stack, snake.body[snake.head].x , snake.body[snake.head].y)){
 
-    //do{
-    //    if(map.eggs_count==0){
-    //        add_eggs(&map, snake.length - snake.count);
-    //    }
-    //    system("clear");
-    //    printf("Puntuación: %d\n", snake.points);
-    //    paint(&map);
-    //    usleep(200000);
-    //}
-    //while (snake.length-snake.count>0 &&
-    //    move(&snake,&map));
-
-
+        do {
+            usleep(200000);
+            system("clear");
+            next_move = pop(&stack);
+            moveTo(&map, &snake, next_move.x,next_move.y);
+            printf("Puntuación: %d\n", snake.points);
+            paint(&map);
+            if(map.eggs_count==0){
+                add_eggs(&map, snake.length - snake.count);
+            }
+        } while (stack.count>0);
+    }
+    printf("Juego terminado");
     //snake_body(snake);
 }
 
@@ -135,7 +137,7 @@ int move(struct snake *s, struct map *m){
     return 1;
 }
 
-void lee(Map *m, Stack *s, int x, int y){
+int lee(Map *m, Stack *s, int x, int y){
     Queue q;
     new_queue(&q);
 
@@ -148,7 +150,7 @@ void lee(Map *m, Stack *s, int x, int y){
     for (int i =0; i<m->height;i++){
         matrix[i]= (int *)calloc(m->wide, sizeof(int));
     }
-//
+
     for (int i = 0; i<m->height;i++){
         for(int j =0;j<m->wide;j++){
             if (m->grid[i][j] == BODY ||
@@ -164,8 +166,7 @@ void lee(Map *m, Stack *s, int x, int y){
     int len = 1;
     int egg_x = -1 , egg_y = -1;
     int max_x = -1 , max_y = -1;    
-    while (q.count>0)
-    {
+    while (q.count>0) {
         b = dequeue(&q);
         int new_x, new_y;
         for (int dir = 0; dir < 4; dir++){
@@ -184,12 +185,17 @@ void lee(Map *m, Stack *s, int x, int y){
                 new.x = max_x;
                 new.y = max_y;
                 enqueue(&q,new);
-                if (m->grid[new_y][new_x]==EGG){
+                if (m->grid[new_y][new_x]==EGG && egg_x==-1){
+                    //printf("Huevo: %d,%d\n", max_x,max_y);
                     egg_x = max_x;
                     egg_y = max_y;
                 }
             }
         }
+    }
+
+    if(max_x == -1){
+        return 0;
     }
 
     if(egg_x != -1){
@@ -199,31 +205,36 @@ void lee(Map *m, Stack *s, int x, int y){
 
     b.x = max_x;
     b.y = max_y;
-    printf("%d,%d\n",max_x,max_y);
     
-    push(s,b);
+    //for (int i = 0; i<m->height;i++){
+    //    for(int j =0;j<m->wide;j++){
+    //        printf(" %d", matrix[i][j]);
+    //    }
+    //    printf("\n");
+    //}
 
-    for (int i = matrix[max_y][max_x];i>0;i--){
+    push(s,b);
+    //printf("%d\n", matrix[max_y][max_x]);
+    int i = matrix[max_y][max_x]-1;
+    for (;i>0;i--){
         int new_x, new_y;
         for (int dir = 0; dir < 4; dir++){            
             new_x = peek_s(s).x + x_directional_offset[dir];
             new_y = peek_s(s).y + y_directional_offset[dir];
-            if(matrix[new_y][new_x] == matrix[peek_s(s).y][peek_s(s).x]-1){
+            if(new_x>=0 && new_y >=0 &&
+                new_x<m->wide && new_y<m->height && 
+                matrix[new_y][new_x] == matrix[peek_s(s).y][peek_s(s).x]-1){
                 b.x = new_x;
                 b.y = new_y;
-                printf("Push:(%d,%d)\n", b.x,b.y);
+                //printf("Push:(%d,%d)\n", b.x,b.y);
                 push(s, b);
+                //printf("Peek:(%d,%d)\n", peek_s(s).x,peek_s(s).y);
                 break;
             }
         }
+        //printf("%d\n", i);
     }
-
-    for (int i = 0; i<m->height;i++){
-        for(int j =0;j<m->wide;j++){
-            printf(" %d", matrix[i][j]);
-        }
-        printf("\n");
-    }
+    return 1;
     //while (s.count>0)
     //{
     //    Body u=pop(&s);
