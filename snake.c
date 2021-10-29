@@ -11,8 +11,10 @@ static int y_directional_offset[] = {0, 1, 0, -1 };
 static struct body directionanding[4];
 static int directionanding_index = 0;
 
-void start(struct map *map, struct snake *snake, int height, int wide);
-int move(struct snake *s, struct map *m);  
+void start(struct map *map, struct snake *snake, int height, int wide);                //Function Prototype
+int move(struct snake *s, struct map *m);                                                               //Function Prototype
+Stack BFS(Snake *s, Map *m);                                                                               //Function Prototype
+
 
 void main(){
     
@@ -130,3 +132,98 @@ int move(struct snake *s, struct map *m){
     return 1;
 }
 
+Stack BFS(Snake *s, Map *m)
+{
+    Stack result_stack;
+    Queue BFS_Queue;
+    // Node* headNode;
+    Body snake_head_coordinates;
+
+    snake_head_coordinates.x = s->body[s->head].x;
+    snake_head_coordinates.y = s->body[s->head].y;
+
+    int matrix_height = m->height;
+    int matrix_wide = m->wide;
+
+   unsigned int distances_matrix[matrix_height][matrix_wide];
+
+    //Descomentar esto si hace falta inicializar la matriz en cada casilla a 0....
+    // for (size_t i = 0; i < matrix_height; i++)
+    // {
+    //     for (size_t j = 0; j < matrix_wide; j++)
+    //     {
+    //         distances_matrix[i][j] = 0;
+    //     }
+    // }
+    
+    //Descomentar en caso de que no se inicialice la Cola de forma automatica...
+    // headNode->body = snake_head_coordinates;
+    // BFS_Queue.count++;
+    // headNode->body = snake_head_coordinates;
+    // BFS_Queue.top = headNode;
+    enqueue(&BFS_Queue, snake_head_coordinates);
+    int egg_found = 0;
+    while(1)
+    {
+        Body current_body = dequeue(&BFS_Queue);
+        int current_body_x = current_body.x;
+        int current_body_y = current_body.y;
+        int current_distance_value = distances_matrix[current_body_y][current_body_x];
+        for (size_t dir = 0; dir < 4; dir++)
+        {
+            int current_directional_x = x_directional_offset[dir];
+            int current_directional_y = y_directional_offset[dir];
+            Body current_directional_corrdinates;
+            current_directional_corrdinates.x = current_directional_x;
+            current_directional_corrdinates.y  = current_directional_y;
+            if(0 == IsAValidCoordinate(current_directional_corrdinates, matrix_wide, matrix_height) ||
+                        m->grid[current_directional_y][current_directional_x] == BODY                              ||
+                        m->grid[current_directional_y][current_directional_x] == HEAD)
+                 continue;
+            if(m->grid[current_directional_y][current_directional_x] == EGG)
+            {
+                distances_matrix[current_directional_y][current_directional_x] = current_distance_value + 1;
+                push(&result_stack, current_directional_corrdinates);
+                egg_found = 1;
+                break;
+            }
+            
+            if(distances_matrix[current_directional_y][current_directional_x] == 0)
+            {
+                distances_matrix[current_directional_y][current_directional_x] = current_distance_value + 1;
+                enqueue(&BFS_Queue, current_directional_corrdinates);
+            }
+        }
+        if(egg_found == 1)break;
+        if(BFS_Queue.count == 0)
+        {
+            push(&result_stack, current_body);
+            break;
+        }
+    }
+
+    Body destinyCell = peek_s(&result_stack);
+    unsigned int way_distance = distances_matrix[destinyCell.y][destinyCell.x];
+    for (unsigned int current_distance = way_distance - 1; current_distance > 0; current_distance--)
+    {
+        for (size_t dir = 0; dir < 4; dir++)
+        {
+            int new_x = destinyCell.x + x_directional_offset[dir];
+            int new_y = destinyCell.y + y_directional_offset[dir];
+            if(distances_matrix[new_y][new_x] == current_distance)
+            {
+                destinyCell = NewBody(new_x, new_y);
+                push(&result_stack, destinyCell);
+                break;
+            }
+        }
+        
+    }
+    return result_stack;
+}
+
+int IsAValidCoordinate(Body coordinate, int wide, int height)
+{
+    if(coordinate.x >= 0 && coordinate.x < wide && coordinate.y >= 0 && coordinate.y < height)return 1;
+    return 0;
+}

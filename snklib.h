@@ -26,6 +26,7 @@ typedef struct map{
     int eggs_count;
 }Map;
 
+Body NewBody(int x, int y);
 void moveTo(struct map *m, struct snake *s, int new_x, int new_y);
 void paint(struct map *map);
 void snake_body(struct snake s);

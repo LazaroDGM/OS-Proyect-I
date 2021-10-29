@@ -4,6 +4,14 @@
 #include <unistd.h>
 #include "snklib.h"
 
+Body NewBody(int x, int y)
+{
+    Body b;
+    b.x = x;
+    b.y = y;
+    return b;
+}
+
 void moveTo(struct map *m, struct snake *s, int new_x, int new_y)
 {
     if(s->grow_count == 0) 
