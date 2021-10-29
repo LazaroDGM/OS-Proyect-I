@@ -10,6 +10,7 @@ static int x_directional_offset[] = {-1, 0, 1, 0 };
 static int y_directional_offset[] = {0, 1, 0, -1 };
 static struct body directionanding[4];
 static int directionanding_index = 0;
+static Stack MovesStack;
 
 void start(struct map *map, struct snake *snake, int height, int wide);                //Function Prototype
 int move(struct snake *s, struct map *m);                                                               //Function Prototype
@@ -19,26 +20,37 @@ Stack BFS(Snake *s, Map *m);                                                    
 void main(){
     
     int height, wide;
-
-    scanf("%d%d", &height, &wide);
-
+    int presicion;
+    scanf("%d%d%d", &height, &wide, &presicion);
+    presicion = ((presicion - 1) % 10) + 1;
     struct snake snake;
     struct map map;
-
     start(&map, &snake, height, wide);
 
-    do{
-        if(map.eggs_count==0){
-            add_eggs(&map, snake.length - snake.count);
-        }
-        system("clear");
-        printf("Puntuación: %d\n", snake.points);
-        paint(&map);
-        usleep(200000);
-    }
-    while (snake.length-snake.count>0 &&
-        move(&snake,&map));
+    // do{
+    //     if(map.eggs_count==0){
+    //         add_eggs(&map, snake.length - snake.count);
+    //     }
+    //     system("clear");
+    //     printf("Puntuación: %d\n", snake.points);
+    //     paint(&map);
+    //     usleep(200000);
+    // }
+    // while (snake.length-snake.count>0 &&
+    //     move(&snake,&map));
 
+
+    do
+    {
+        MovesStack = BFS(&snake, &map);
+        int count = (MovesStack.count / presicion);
+        for (; count > 0; count--)
+        {
+            Body CurrentDestinyMove = pop(&MovesStack);
+            moveTo(&map, &snake, CurrentDestinyMove.x, CurrentDestinyMove.y);
+        }
+    } while (MovesStack.count > 1);
+    
 
     //snake_body(snake);
 }
