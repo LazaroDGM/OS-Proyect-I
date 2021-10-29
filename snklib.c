@@ -24,6 +24,12 @@ void moveTo(struct map *m, struct snake *s, int new_x, int new_y)
         s->grow_count--;
         s->count++;
     }
+    if(m->grid[new_y][new_x] == EGG)
+    {
+        m->eggs_count--;
+        s->points++;
+        s->grow_count+=3;
+    }
     int current_head_x_position = s->body[s->head].x;
     int current_head_y_position = s->body[s->head].y;
     m->grid[current_head_y_position][current_head_x_position] = BODY;

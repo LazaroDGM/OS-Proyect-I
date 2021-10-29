@@ -16,6 +16,9 @@ void start(struct map *map, struct snake *snake, int height, int wide);         
 int move(struct snake *s, struct map *m);                                                               //Function Prototype
 Stack BFS(Snake *s, Map *m);                                                                               //Function Prototype
 
+void start(struct map *map, struct snake *snake, int height, int wide);
+int move(struct snake *s, struct map *m);  
+int lee(Map *m, Stack *s, int x, int y);
 
 void main(){
     
@@ -25,7 +28,12 @@ void main(){
     presicion = ((presicion - 1) % 10) + 1;
     struct snake snake;
     struct map map;
+    Stack stack;
+    new_stack(&stack);
+
     start(&map, &snake, height, wide);
+    add_eggs(&map, snake.length - snake.count);
+    paint(&map);
 
     // do{
     //     if(map.eggs_count==0){
@@ -40,18 +48,35 @@ void main(){
     //     move(&snake,&map));
 
 
-    do
-    {
-        MovesStack = BFS(&snake, &map);
-        int count = (MovesStack.count / presicion);
-        for (; count > 0; count--)
-        {
-            Body CurrentDestinyMove = pop(&MovesStack);
-            moveTo(&map, &snake, CurrentDestinyMove.x, CurrentDestinyMove.y);
-        }
-    } while (MovesStack.count > 1);
+    // do
+    // {
+    //     MovesStack = BFS(&snake, &map);
+    //     int count = (MovesStack.count / presicion);
+    //     for (; count > 0; count--)
+    //     {
+    //         Body CurrentDestinyMove = pop(&MovesStack);
+    //         moveTo(&map, &snake, CurrentDestinyMove.x, CurrentDestinyMove.y);
+    //     }
+    // } while (MovesStack.count > 1);
     
 
+    Body next_move;
+    while (snake.length-snake.count>0 &&
+        lee(&map, &stack, snake.body[snake.head].x , snake.body[snake.head].y)){
+
+        do {
+            usleep(200000);
+            system("clear");
+            next_move = pop(&stack);
+            moveTo(&map, &snake, next_move.x,next_move.y);
+            printf("Puntuación: %d\n", snake.points);
+            paint(&map);
+            if(map.eggs_count==0){
+                add_eggs(&map, snake.length - snake.count);
+            }
+        } while (stack.count>0);
+    }
+    printf("Juego terminado");
     //snake_body(snake);
 }
 
@@ -238,4 +263,124 @@ int IsAValidCoordinate(Body coordinate, int wide, int height)
 {
     if(coordinate.x >= 0 && coordinate.x < wide && coordinate.y >= 0 && coordinate.y < height)return 1;
     return 0;
+}
+
+
+int lee(Map *m, Stack *s, int x, int y){
+    Queue q;
+    new_queue(&q);
+
+    Body b;
+    b.x = x;
+    b.y = y;
+    enqueue(&q, b);
+
+    int ** matrix=(int **)calloc(m->height,sizeof(int *));
+    for (int i =0; i<m->height;i++){
+        matrix[i]= (int *)calloc(m->wide, sizeof(int));
+    }
+
+    for (int i = 0; i<m->height;i++){
+        for(int j =0;j<m->wide;j++){
+            if (m->grid[i][j] == BODY ||
+                m->grid[i][j] == HEAD){
+                    matrix[i][j]= -2;
+                }
+            else
+                matrix[i][j]=-1;
+        }
+    }
+
+    Stack eggs;
+    new_stack(&eggs);
+
+    matrix[y][x]=0;
+    int len = 1;
+    int egg_x = -1 , egg_y = -1;
+    int max_x = -1 , max_y = -1;    
+    while (q.count>0) {
+        b = dequeue(&q);
+        int new_x, new_y;
+        for (int dir = 0; dir < 4; dir++){
+            
+            new_x = b.x + x_directional_offset[dir];
+            new_y = b.y + y_directional_offset[dir];
+            if(new_x>=0 && new_y >=0 &&
+                new_x<m->wide && new_y<m->height && 
+                matrix[new_y][new_x] == -1){
+                
+                max_x =b.x + x_directional_offset[dir];
+                max_y =b.y + y_directional_offset[dir];
+                matrix[max_y][max_x] = matrix[b.y][b.x] + 1;
+
+                Body new;
+                new.x = max_x;
+                new.y = max_y;
+                enqueue(&q,new);
+                if (m->grid[new_y][new_x]==EGG){
+                    Body egg;
+                    egg.x = new_x;
+                    egg.y = new_y;
+                    push(&eggs, egg);
+                    printf("Huevo: %d,%d\n", peek_s(&eggs).x,peek_s(&eggs).y);
+                }
+            }
+        }
+    }
+
+    if(max_x == -1){
+        return 0;
+    }
+
+    
+    //for (int i = 0; i<m->height;i++){
+    //    for(int j =0;j<m->wide;j++){
+    //        printf(" %d", matrix[i][j]);
+    //    }
+    //    printf("\n");
+    //}
+    printf("%d", eggs.count);
+    if (eggs.count>0){
+        srand(time(NULL));
+        int r = rand() % (eggs.count);
+        while (eggs.count>0){               
+            if (eggs.count==r+1){
+                push(s,peek_s(&eggs));
+            }
+            pop(&eggs);
+        }
+    }else{
+        b.x = max_x;
+        b.y = max_y;
+        push(s,b);
+    }
+    
+
+    //printf("%d\n", matrix[max_y][max_x]);
+    int i = matrix[peek_s(s).y][peek_s(s).x]-1;
+    for (;i>0;i--){
+        int new_x, new_y;
+        for (int dir = 0; dir < 4; dir++){            
+            new_x = peek_s(s).x + x_directional_offset[dir];
+            new_y = peek_s(s).y + y_directional_offset[dir];
+            if(new_x>=0 && new_y >=0 &&
+                new_x<m->wide && new_y<m->height && 
+                matrix[new_y][new_x] == matrix[peek_s(s).y][peek_s(s).x]-1){
+                b.x = new_x;
+                b.y = new_y;
+                //printf("Push:(%d,%d)\n", b.x,b.y);
+                push(s, b);
+                //printf("Peek:(%d,%d)\n", peek_s(s).x,peek_s(s).y);
+                break;
+            }
+        }
+        //printf("%d\n", i);
+    }
+    return 1;
+    //while (s.count>0)
+    //{
+    //    Body u=pop(&s);
+    //    printf("(%d,%d)\n", u.x,u.y);
+    //}
+    
 }
