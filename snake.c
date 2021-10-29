@@ -27,6 +27,8 @@ void main(){
     new_stack(&stack);
 
     start(&map, &snake, height, wide);
+    add_eggs(&map, snake.length - snake.count);
+    paint(&map);
 
     Body next_move;
     while (snake.length-snake.count>0 &&
@@ -162,6 +164,9 @@ int lee(Map *m, Stack *s, int x, int y){
         }
     }
 
+    Stack eggs;
+    new_stack(&eggs);
+
     matrix[y][x]=0;
     int len = 1;
     int egg_x = -1 , egg_y = -1;
@@ -185,10 +190,12 @@ int lee(Map *m, Stack *s, int x, int y){
                 new.x = max_x;
                 new.y = max_y;
                 enqueue(&q,new);
-                if (m->grid[new_y][new_x]==EGG && egg_x==-1){
-                    //printf("Huevo: %d,%d\n", max_x,max_y);
-                    egg_x = max_x;
-                    egg_y = max_y;
+                if (m->grid[new_y][new_x]==EGG){
+                    Body egg;
+                    egg.x = new_x;
+                    egg.y = new_y;
+                    push(&eggs, egg);
+                    printf("Huevo: %d,%d\n", peek_s(&eggs).x,peek_s(&eggs).y);
                 }
             }
         }
@@ -198,13 +205,6 @@ int lee(Map *m, Stack *s, int x, int y){
         return 0;
     }
 
-    if(egg_x != -1){
-        max_x = egg_x;
-        max_y = egg_y;
-    }
-
-    b.x = max_x;
-    b.y = max_y;
     
     //for (int i = 0; i<m->height;i++){
     //    for(int j =0;j<m->wide;j++){
@@ -212,10 +212,25 @@ int lee(Map *m, Stack *s, int x, int y){
     //    }
     //    printf("\n");
     //}
+    printf("%d", eggs.count);
+    if (eggs.count>0){
+        srand(time(NULL));
+        int r = rand() % (eggs.count);
+        while (eggs.count>0){               
+            if (eggs.count==r+1){
+                push(s,peek_s(&eggs));
+            }
+            pop(&eggs);
+        }
+    }else{
+        b.x = max_x;
+        b.y = max_y;
+        push(s,b);
+    }
+    
 
-    push(s,b);
     //printf("%d\n", matrix[max_y][max_x]);
-    int i = matrix[max_y][max_x]-1;
+    int i = matrix[peek_s(s).y][peek_s(s).x]-1;
     for (;i>0;i--){
         int new_x, new_y;
         for (int dir = 0; dir < 4; dir++){            
