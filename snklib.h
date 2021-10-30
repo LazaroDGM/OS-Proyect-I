@@ -27,5 +27,6 @@ typedef struct map{
 }Map;
 
 void moveTo(struct map *m, struct snake *s, int new_x, int new_y);
+void add_eggs(struct map *m, int voids);
 void paint(struct map *map);
 void snake_body(struct snake s);

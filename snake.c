@@ -13,13 +13,14 @@ static int directionanding_index = 0;
 
 void start(struct map *map, struct snake *snake, int height, int wide);
 int move(struct snake *s, struct map *m);  
-int lee(Map *m, Stack *s, int x, int y);
+int lee(Map *m, Stack *s, int x, int y, int *frecuence);
 
-void main(){
+void main(int argc, char *argv[]){
     
     int height, wide;
 
-    scanf("%d%d", &height, &wide);
+    height = (int)strtol(argv[1], NULL,0);
+    wide = (int)strtol(argv[2], NULL,0);
 
     struct snake snake;
     struct map map;
@@ -30,12 +31,13 @@ void main(){
     add_eggs(&map, snake.length - snake.count);
     paint(&map);
 
+    int frecuence = 0;
     Body next_move;
     while (snake.length-snake.count>0 &&
-        lee(&map, &stack, snake.body[snake.head].x , snake.body[snake.head].y)){
-
+        lee(&map, &stack, snake.body[snake.head].x , snake.body[snake.head].y, &frecuence)){
+        
         do {
-            usleep(200000);
+            usleep(50000);
             system("clear");
             next_move = pop(&stack);
             moveTo(&map, &snake, next_move.x,next_move.y);
@@ -43,6 +45,11 @@ void main(){
             paint(&map);
             if(map.eggs_count==0){
                 add_eggs(&map, snake.length - snake.count);
+            }
+            if(frecuence-- <= 0){
+                while (stack.count>0){
+                    pop(&stack);
+                }
             }
         } while (stack.count>0);
     }
@@ -139,7 +146,7 @@ int move(struct snake *s, struct map *m){
     return 1;
 }
 
-int lee(Map *m, Stack *s, int x, int y){
+int lee(Map *m, Stack *s, int x, int y, int *frecuence){
     Queue q;
     new_queue(&q);
 
@@ -219,6 +226,7 @@ int lee(Map *m, Stack *s, int x, int y){
         while (eggs.count>0){               
             if (eggs.count==r+1){
                 push(s,peek_s(&eggs));
+                
             }
             pop(&eggs);
         }
@@ -228,6 +236,11 @@ int lee(Map *m, Stack *s, int x, int y){
         push(s,b);
     }
     
+    if(m->grid[peek_s(s).y][peek_s(s).x]==EGG){
+        *frecuence = matrix[peek_s(s).y][peek_s(s).x];
+    } else{
+        *frecuence = matrix[peek_s(s).y][peek_s(s).x]/4;
+    }
 
     //printf("%d\n", matrix[max_y][max_x]);
     int i = matrix[peek_s(s).y][peek_s(s).x]-1;
