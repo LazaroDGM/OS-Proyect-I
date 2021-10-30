@@ -5,6 +5,9 @@
 
 enum direction{ LEFT=0, UP, RIGHT, DOWN};
 
+// Tupla que contiene coordenadas x y y
+// Su nombre es body porque fundamentalmente
+// se usan para el cuerpo de la serpiente.
 typedef struct body{
     int x, y;
 }Body;
